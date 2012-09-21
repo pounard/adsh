@@ -1,0 +1,11 @@
+{
+    "name": "drupal/adsh",
+    "description": "Alternative Drupal Shell",
+    "autoload": {
+        "psr-0": {"Adsh": "src/"}
+    },
+    "require": {
+        "symfony/console": "2.0.*",
+        "symfony/event-dispatcher": "2.0.*",
+    }
+}
