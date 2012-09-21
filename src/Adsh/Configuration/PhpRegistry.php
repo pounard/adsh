@@ -35,10 +35,14 @@ class PhpRegistry implements SiteRegistryInterface
      */
     public static function getHomeConfigurationFilename()
     {
-        switch (php_sapi_name()) {
+        switch (PHP_OS) {
 
             case 'WINNT':
-                throw new \RuntimeException("WinNT is not supported yet");
+                if (isset($_SERVER['HOME'])) {
+                  return $_SERVER['HOME'] . '/.adshrc.php';
+                } else {
+                  return getenv('HOME') . '/.adshrc.php';
+                }
 
             default:
                 // We probably are running in a UNIX environment
