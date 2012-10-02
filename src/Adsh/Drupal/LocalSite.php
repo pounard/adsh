@@ -413,7 +413,7 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
      */
     public function bootstrap($mode = SiteInterface::BOOTSTRAP_FULL)
     {
-        $siteroot = $this->getSiteRoot();
+        $siteroot = $realRoot = $this->getSiteRoot();
         $this->prepareEventDispatcher();
 
         if (is_dir($siteroot . '/core')) {
@@ -427,8 +427,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
                 "Site is not a Drupal site: %s", $siteroot));
         }
 
-        // Some minor modifications are mandatory here, do not use the local
-        // variables because they have been altered
         chdir($siteroot);
         define('DRUPAL_ROOT', $siteroot);
 
@@ -464,7 +462,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
                 break;
         }
 
-        // self::bootstrapDrupal(DRUPAL_BOOTSTRAP_CONFIGURATION);
         drupal_bootstrap(DRUPAL_BOOTSTRAP_CONFIGURATION);
         $this->raiseSiteEvent(self::EVENT_BOOTSTRAP_POST_CONFIGURE);
 
@@ -472,14 +469,12 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
             return;
         }
 
-        // self::bootstrapDrupal(DRUPAL_BOOTSTRAP_DATABASE);
         drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE);
 
         if ($mode < DRUPAL_BOOTSTRAP_VARIABLES) {
             return;
         }
 
-        // self::bootstrapDrupal(DRUPAL_BOOTSTRAP_VARIABLES);
         drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES);
 
         if ($mode < DRUPAL_BOOTSTRAP_FULL) {
@@ -487,7 +482,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
         }
 
         // FIXME: D8 is different
-        // self::bootstrapDrupal(DRUPAL_BOOTSTRAP_FULL);
         drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
         $this->markAsBootstrapped();
