@@ -9,33 +9,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ListSitesCommand extends Command implements SiteRegistryAwareInterface
+class ListSitesCommand extends Command
 {
-    /**
-     * @var site Adsh\Configuration\SiteRegistryInterface
-     */
-    private $registry;
-
-    /**
-     * {@inheritdoc}
-     */
-    final public function setRegistry(SiteRegistryInterface $registry)
-    {
-        $this->registry = $registry;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    final public function getRegistry()
-    {
-        if (!isset($this->registry)) {
-            throw new \LogicException("No site registry set");
-        }
-
-        return $this->registry;
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -54,7 +29,13 @@ class ListSitesCommand extends Command implements SiteRegistryAwareInterface
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        foreach ($this->getRegistry()->getList() as $identifier => $site) {
+        $application = $this->getApplication();
+
+        if (!$application instanceof \Adsh\Application) {
+            throw new \LogicException("This command can only run in Adsh");
+        }
+
+        foreach ($application->getRegistry()->getList() as $identifier => $site) {
             $output->writeln(sprintf("<info>%s</info>\t%s",
                 $identifier, (string)$site));
         }

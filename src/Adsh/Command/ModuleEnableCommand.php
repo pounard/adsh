@@ -20,9 +20,11 @@ class ModuleEnableCommand extends SiteCommand
         $this
             ->setDefinition(array(
                 new InputOption('site', 's',
-                    InputOption::VALUE_REQUIRED, "Site to operate on"),
-                new InputOption('modules', 'm',
+                    InputOption::VALUE_OPTIONAL, "Site to operate on"),
+                new InputOption('module', 'm',
                     InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, "Module(s) to enable"),
+                new InputOption('nodeps', null,
+                    InputOption::VALUE_NONE, "Ignore dependencies (may break your site)"),
             ))
             ->setName('module-enable')
             ->setAliases(array('me'))
@@ -39,11 +41,12 @@ class ModuleEnableCommand extends SiteCommand
         $site->bootstrap();
 
         $enabled             = array();
-        $modules             = $input->getOption('modules');
+        $modules             = $input->getOption('module');
         $missingModules      = array();
         $missingDependencies = array();
         $alreadyEnabled      = array();
         $dialogHelper        = $this->getHelper('dialog');
+        $useDependencies     = !$input->getOption('nodeps');
 
         // First check that modules exists
         foreach ($modules as $module) {
@@ -93,7 +96,7 @@ class ModuleEnableCommand extends SiteCommand
         }
 
         foreach ($modules as $module) {
-            if (module_enable(array($module))) {
+            if (module_enable(array($module), $useDependencies)) {
                 $output->writeln(sprintf("<info>Module enabled: %s</info>", $module));
             } else {
                 $output->writeln(sprintf("<error>Module could not be enabled: %s</error>",

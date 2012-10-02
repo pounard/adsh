@@ -2,59 +2,14 @@
 
 namespace Adsh\Command;
 
-use Adsh\Configuration\SiteRegistryAwareInterface;
-use Adsh\Configuration\SiteRegistryInterface;
-use Adsh\Drupal\LocalSite;
 use Adsh\Drupal\SiteInterface;
 
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
 
-abstract class SiteCommand extends Command implements
-    SiteRegistryAwareInterface
+abstract class SiteCommand extends Command
 {
-    /**
-     * @var site Adsh\Configuration\SiteRegistryInterface
-     */
-    private $registry;
-
-    /**
-     * {@inheritdoc}
-     */
-    final public function setRegistry(SiteRegistryInterface $registry)
-    {
-        $this->registry = $registry;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    final public function getRegistry()
-    {
-        if (!isset($this->registry)) {
-            throw new \LogicException("No site registry set");
-        }
-
-        return $this->registry;
-    }
-
-    /**
-     * Implementors must implement this method completely and site parameter
-     * should be used as well
-     *
-     * {@inheritdoc}
-     */
-    protected function configure()
-    {
-        $this
-            ->setDefinition(array(
-                new InputOption('site', 's', InputOption::VALUE_OPTIONAL, "Site to operate on"),
-            ));
-    }
-
     /**
      * Execute command onto the given site
      *
@@ -70,18 +25,16 @@ abstract class SiteCommand extends Command implements
      */
     final protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($identifier = $input->getOption('site')) {
-            $site = $this->getRegistry()->getInstance($identifier);
-        } else {
-            // We maybe are in a local site root
-            $site = LocalSite::findLocalInstance();
+        $application = $this->getApplication();
+
+        if (!$application instanceof \Adsh\Application) {
+            throw new \LogicException("This command can only run in Adsh");
         }
 
-        $application = $this->getApplication();
-        if ($application instanceof \Adsh\Application) {
-            $site->setEventDispatcher($application->getEventDispatcher());
-        }
+        $site = $application->getSite();
         $output->writeln(sprintf("<comment>Working on: %s</comment>", (string)$site));
+
+        $site->setEventDispatcher($application->getEventDispatcher());
         $this->executeOnSite($input, $output, $site);
     }
 }

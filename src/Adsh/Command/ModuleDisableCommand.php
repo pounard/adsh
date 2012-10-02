@@ -21,10 +21,13 @@ class ModuleDisableCommand extends SiteCommand
         $this
             ->setDefinition(array(
                 new InputOption('site', 's',
-                    InputOption::VALUE_REQUIRED, "Site to operate on"),
-                new InputOption('modules', 'm',
+                    InputOption::VALUE_OPTIONAL, "Site to operate on"),
+                new InputOption('module', 'm',
                     InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, "Module(s) to disable"),
-                new InputOption('uninstall', null, InputOption::VALUE_NONE, "Force modules uninstall (also work with already disabled modules)"),
+                new InputOption('uninstall', null,
+                    InputOption::VALUE_NONE, "Force modules uninstall (also work with already disabled modules)"),
+                new InputOption('nodeps', null,
+                    InputOption::VALUE_NONE, "Ignore dependencies (may break your site)"),
             ))
             ->setName('module-disable')
             ->setAliases(array('md'))
@@ -40,11 +43,12 @@ class ModuleDisableCommand extends SiteCommand
     {
         $site->bootstrap();
 
-        $enabled     = array();
-        $modules     = $input->getOption('modules');
-        $disabled    = array();
-        $toUninstall = array();
-        $doUninstall = $input->getOption('uninstall');
+        $enabled         = array();
+        $modules         = $input->getOption('module');
+        $disabled        = array();
+        $toUninstall     = array();
+        $doUninstall     = $input->getOption('uninstall');
+        $useDependencies = !$input->getOption('nodeps');
 
         // First check that modules exists
         foreach ($modules as $module) {
@@ -79,7 +83,7 @@ class ModuleDisableCommand extends SiteCommand
         foreach ($enabled as $module) {
             // Errors can happen, but Drupal does not allow any error control
             // when doing this operation
-            module_disable(array($module));
+            module_disable(array($module), $useDependencies);
             $output->writeln(sprintf("<info>Module disabled: %s</info>", $module));
             $toUninstall[] = $module;
         }
@@ -92,7 +96,7 @@ class ModuleDisableCommand extends SiteCommand
             }
 
             foreach ($toUninstall as $module) {
-                if (drupal_uninstall_modules(array($module))) {
+                if (drupal_uninstall_modules(array($module), $useDependencies)) {
                     $output->writeln(sprintf("<info>Module uninstalled: %s</info>", $module));
                 } else {
                     $output->writeln(sprintf("<error>Module could not be uninstalled: %s</error>", $module));

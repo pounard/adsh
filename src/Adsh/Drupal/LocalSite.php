@@ -61,70 +61,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
     }
 
     /**
-     * Bootstrap drupal without calling the drupal_bootstrap() function. This
-     * allows us to bypass some useless operations when running in CLI, thanks
-     * Drush for the idea
-     *
-     * FIXME: I'm really not fond of doing this, but this is really faster than
-     * doing a full bootstrap with session and language
-     */
-    public static function bootstrapDrupal($phase)
-    {
-        static $final_phase = DRUPAL_BOOTSTRAP_FULL,
-               $stored_phase = -1,
-               $current_phase = -1;
-
-        if (isset($phase)) {
-            while ($phase > $stored_phase && $final_phase > $stored_phase) {
-
-                if ($current_phase > $stored_phase) {
-                    $stored_phase = $current_phase;
-                }
-                ++$current_phase;
-
-                switch ($current_phase) {
-
-                    case DRUPAL_BOOTSTRAP_CONFIGURATION:
-                        _drupal_bootstrap_configuration();
-                        require_once DRUPAL_ROOT . '/includes/cache.inc';
-                        foreach (variable_get('cache_backends', array()) as $include) {
-                            require_once DRUPAL_ROOT . '/' . $include;
-                        }
-                        break;
-
-                    case DRUPAL_BOOTSTRAP_DATABASE:
-                        _drupal_bootstrap_database();
-                        break;
-
-                    case DRUPAL_BOOTSTRAP_VARIABLES:
-                        _drupal_bootstrap_variables();
-                        break;
-
-                    case DRUPAL_BOOTSTRAP_PAGE_HEADER:
-                        _drupal_bootstrap_page_header();
-                        break;
-
-                    case DRUPAL_BOOTSTRAP_LANGUAGE:
-                        // CLI doesn't need any user language
-                        $default = language_default();
-                        foreach (language_types() as $type) {
-                            $GLOBALS[$type] = $default;
-                        }
-                        break;
-
-                    case DRUPAL_BOOTSTRAP_FULL:
-                        // FIXME: Sadly, session is required, we should provide a
-                        // null implementation instead
-                        require_once DRUPAL_ROOT . '/' . variable_get('session_inc', 'includes/session.inc');
-                        require_once DRUPAL_ROOT . '/includes/common.inc';
-                        _drupal_bootstrap_full();
-                        break;
-                }
-            }
-        }
-    }
-
-    /**
      * Site identifier for multisite installation
      *
      * @var string
@@ -210,7 +146,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
      * @param bool $coreFile    If set to true, will also lookup prefixing by
      *                          the 'core' depending on Drupal version
      * @param int $bufferLength Buffer size to load
-     *
      * @return string           File contents
      */
     protected function getFileBuffer($filename,
@@ -257,7 +192,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
      * Attempt to find Drupal version on a non bootstrapped site
      *
      * @return string            Drupal version constant value
-     *
      * @throws \RuntimeException If version could not be found
      */
     protected function findVersion()
@@ -281,7 +215,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
      * Attempt to find Drupal URL on a non bootstrapped site
      *
      * @return string            Site URL
-     *
      * @throws \RuntimeException If URL could not be found
      */
     protected function findUrl()
@@ -393,8 +326,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
                 } catch (AdshException $e) {
                     throw new SiteHasNoUrlException(
                         "The URL of this site cannot be determined automatically",
-                        // The exception is catched, it is an Exception
-                        // descendent, we can afford being not type safe here
                         $e->getCode(), $e);
 
                     $this->urlCannotBeFound = true;
@@ -478,10 +409,6 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
     }
 
     /**
-     * FIXME: I want to keep this implementation as simple as possible, but
-     * Drush got it right: doing a custom bootstrap is way more efficient
-     * than using Drupal's one
-     *
      * {@inheritdoc}
      */
     public function bootstrap($mode = SiteInterface::BOOTSTRAP_FULL)
@@ -497,13 +424,13 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
         if (!file_exists($siteroot . '/includes/bootstrap.inc')) {
             // FIXME: D8 might change this
             throw new \LogicException(sprintf(
-                "Site is not a Drupal site: %s", $this->siteroot));
+                "Site is not a Drupal site: %s", $siteroot));
         }
 
         // Some minor modifications are mandatory here, do not use the local
         // variables because they have been altered
-        chdir($this->siteroot);
-        define('DRUPAL_ROOT', $this->siteroot);
+        chdir($siteroot);
+        define('DRUPAL_ROOT', $siteroot);
 
         $this->raiseSiteEvent(self::EVENT_ENV_PREPARE);
 
