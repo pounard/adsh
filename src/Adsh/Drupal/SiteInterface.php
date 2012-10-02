@@ -2,6 +2,7 @@
 
 namespace Adsh\Drupal;
 
+use Adsh\Command\CommandRegistryInterface;
 use Adsh\EventDispatcher\EventDispatcherAwareInterface;
 
 /**
@@ -133,13 +134,18 @@ interface SiteInterface extends EventDispatcherAwareInterface
      * Bootstrap the Drupal site
      *
      * @param int $mode        Level of bootstrapping
-     *
      * @return boolean         True on success
-     *
      * @throws \LogicException If another site is bootstrapped on the same
      *                         physical machine in the same script run
      */
     public function bootstrap($mode = self::BOOTSTRAP_FULL);
+
+    /**
+     * Get command registry associated to this site
+     *
+     * @return CommandRegistryInterface Command registry
+     */
+    public function getCommandRegistry();
 
     /**
      * Get a short textual site representation

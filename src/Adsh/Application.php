@@ -2,9 +2,9 @@
 
 namespace Adsh;
 
-use Adsh\Command\CacheClearCommand;
-use Adsh\Command\ModuleDisableCommand;
-use Adsh\Command\ModuleEnableCommand;
+use Adsh\Command\Local\CacheClearCommand;
+use Adsh\Command\Local\ModuleDisableCommand;
+use Adsh\Command\Local\ModuleEnableCommand;
 use Adsh\Configuration\SiteRegistryAwareInterface;
 use Adsh\Configuration\SiteRegistryInterface;
 use Adsh\Drupal\LocalSite;
@@ -152,15 +152,11 @@ class Application extends ConsoleApplication implements
         }
 
         if ($input->hasParameterOption(array('--site', '-s'))) {
-            $this->setSite($this->getRegistry()->getInstance(
-                $input->getParameterOption(array('--site', '-s'))));
+            $site = $this->getRegistry()->get($input->getParameterOption(array('--site', '-s')));
+            $this->setSite($site);
 
             // We found a site, we can therefore register commands for it
-            $this->addCommands(array(
-                new CacheClearCommand(),
-                new ModuleDisableCommand(),
-                new ModuleEnableCommand(),
-            ));
+            $this->addCommands($site->getCommandRegistry()->getAll());
         }
 
         parent::doRun($input, $output);

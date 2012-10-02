@@ -2,6 +2,12 @@
 
 namespace Adsh\Drupal;
 
+use Adsh\Command\LocalCommandRegistry;
+
+use Adsh\Command\CommandRegistryCollection;
+use Adsh\Command\Local\CacheClearCommand;
+use Adsh\Command\Local\ModuleDisableCommand;
+use Adsh\Command\Local\ModuleEnableCommand;
 use Adsh\EventDispatcher\EventDispatcherAware;
 use Adsh\Exception as AdshException;
 use Adsh\Plugin\PrepareEnvListener;
@@ -492,5 +498,22 @@ class LocalSite extends EventDispatcherAware implements SiteInterface
     {
         return sprintf("%s [%s]",
             $this->getSiteRoot(), $this->getSiteIdentifier());
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCommandRegistry()
+    {
+        // Build a new command registry using known local commands
+        $registry = new LocalCommandRegistry(array(
+            new CacheClearCommand(),
+            new ModuleDisableCommand(),
+            new ModuleEnableCommand(),
+        ));
+
+        // @todo Later check for Adsh client installed and retrieve commands
+
+        return $registry;
     }
 }

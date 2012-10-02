@@ -35,7 +35,7 @@ class ListSitesCommand extends Command
             throw new \LogicException("This command can only run in Adsh");
         }
 
-        foreach ($application->getRegistry()->getList() as $identifier => $site) {
+        foreach ($application->getRegistry()->getAll() as $identifier => $site) {
             $output->writeln(sprintf("<info>%s</info>\t%s",
                 $identifier, (string)$site));
         }

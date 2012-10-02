@@ -145,7 +145,7 @@ class PhpRegistry implements SiteRegistryInterface
 
         foreach ($this->sites as $identifier => $definition) {
             if (!isset($this->instances[$identifier])) {
-                $this->getInstance($identifier);
+                $this->get($identifier);
             }
         }
 
@@ -155,7 +155,7 @@ class PhpRegistry implements SiteRegistryInterface
     /**
      * {@inheritdoc}
      */
-    public function getList()
+    public function getAll()
     {
         $this->expandList();
 
@@ -165,7 +165,7 @@ class PhpRegistry implements SiteRegistryInterface
     /**
      * {@inheritdoc}
      */
-    public function getInstance($identifier)
+    public function get($identifier)
     {
         if (!isset($this->instances[$identifier])) {
             if (!isset($this->sites[$identifier])) {
@@ -190,13 +190,5 @@ class PhpRegistry implements SiteRegistryInterface
     public function has($identifier)
     {
         return isset($this->sites[$identifier]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function count()
-    {
-        return count($this->sites);
     }
 }
